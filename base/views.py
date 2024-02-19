@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from .models import Room, Topic
+from .models import Room, Topic, Message
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -81,11 +81,23 @@ def room(request, pk):
 
     room = Room.objects.get(id=pk)
 
+    room_messages = room.message_set.all().order_by('-created')
+
+    if request.method == 'POST':
+        message = Message.objects.create(
+
+            user = request.user,
+            room = room, 
+            body = request.POST.get('body')
+        )
+
+        return redirect('room', pk = room.id)
+
     # room = None
     # for i in rooms:
     #     if i['id'] == int(pk):
     #         room = i
-    context = {'room': room}
+    context = {'room': room, 'room_messages': room_messages}
     return render(request, 'base/room.html', context)
 @login_required(login_url='login')
 def create_room(request):
